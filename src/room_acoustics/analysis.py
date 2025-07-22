@@ -249,6 +249,7 @@ def normalized_echo_density(
 
     # Pad the RIR to handle windowing at the edges
     padded_rir = np.pad(rir, ((half_window, half_window)))
+    rir = np.zeros_like(padded_rir)
 
     # Prepare output array and window function
     output = np.zeros(len(rir) + 2 * half_window)
