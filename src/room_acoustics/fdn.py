@@ -57,18 +57,24 @@ class FeedbackDelayNetwork:
 
         if feedback_matrix_type == 'identity':
             ## WRITE YOUR CODE HERE ##
-            pass 
+            Q = np.eye(self.N) 
         elif feedback_matrix_type == 'random':
             # this is one way to generate a random orthogonal matrix based on QR decomposition
             A = np.random.randn(self.N, self.N)
             Q, R = np.linalg.qr(A)
-            Q = np.matmul(Q, np.diag(np.sign(np.diag(R)))) 
+            Q = np.matmul(Q, np.diag(np.sign(np.diag(R))))
         elif feedback_matrix_type == 'hadamard':
             ## WRITE YOUR CODE HERE ##
-            pass 
+            H = np.array([[1, 1], [1, -1]])
+            while H.shape[0] < self.N:
+                H = np.kron(H, [[1, 1], [1, -1]])
+            Q = H[:self.N, :self.N] / np.sqrt(self.N)
+            #Q = H / np.sqrt(self.N) 
         elif feedback_matrix_type == 'householder':
             ## WRITE YOUR CODE HERE ##
-            pass 
+            v = np.random.randn(self.N)
+            v = v / np.linalg.norm(v)
+            Q = np.eye(self.N) - 2 * np.outer(v, v) 
         elif feedback_matrix_type == 'circulant':
             v = np.random.randn(self.N)
             R = np.fft.fft(v)
@@ -115,17 +121,23 @@ class FeedbackDelayNetwork:
         # process each sample individually
         for sample in input_signal:
             ### WRITE YOUR CODE HERE ###
-            pass
+
             # read output from the delay lines
-            # compute the new input ´delay_input´ to the delay lines 
+            delay_output = np.array([self.delay_buffers[i][self.write_indices[i]] for i in range(self.N)])
+
+            # compute the new input ´delay_input´ to the delay lines
+            delay_input = np.dot(self.feedback_matrix, delay_output) + np.ravel(self.input_gains) * sample
 
             for i in range(self.N):
-                pass
                 # store ´delay_input´ in the delay buffers
+                self.delay_buffers[i][self.write_indices[i]] = delay_input[i]
                 # update the write index for each delay line
+                self.write_indices[i] = (self.write_indices[i] + 1) % self.delay_lengths[i]
                 
             # compute the output sample by multiplying the feedback input with the output gains
+            output_sample = np.dot(np.ravel(self.output_gains), delay_output)
             # you can the "append" method to store the output samples
+            output_signal.append(output_sample)
 
         self.output = np.array(output_signal)
         return self.output
