@@ -161,24 +161,45 @@ class DifferentiableFeedbackDelayNetwork:
         # complete the code by filling the parameters of each module
 
         direct_gain = dsp.Gain(
-
+            size=(1, 1),
+            nfft=self.nfft,
+            requires_grad=True,
+            #map = lambda x: torch.clip(x, min=-1.0, max=1.0),
+            alias_decay_db=self.alias_decay_db
         )
         
         onset_delay = dsp.Delay(
-
+            max_len=self.delay_lengths.max(),
+            size=(1, 1),
+            nfft=self.nfft,
+            isint=True,
+            requires_grad=False,
+            alias_decay_db=self.alias_decay_db
         )
+
         # Input gain
         input_gain = dsp.Gain(
-
+            size=(self.N, 1),
+            nfft=self.nfft,
+            requires_grad=True,
+            alias_decay_db=self.alias_decay_db,
         )
+
         # Output gain
         output_gain = dsp.Gain(
-
+            size=(1, self.N),
+            nfft=self.nfft,
+            requires_grad=True,
+            alias_decay_db=self.alias_decay_db,
         )
 
         # Feedback path with orthogonal matrix
         mixing_matrix = dsp.Matrix(
-            
+            size=(self.N, self.N),
+            nfft=self.nfft,
+            matrix_type='orthogonal',
+            requires_grad=True,
+            alias_decay_db=self.alias_decay_db,
         )
 
         # (NON LEARNABLE) Parallel delay lines
