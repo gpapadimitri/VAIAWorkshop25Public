@@ -104,9 +104,11 @@ class HRIRInterpolator:
 
         # create new grid of azimuth angles, in SOFA these range from [-180, +180] degrees
         # call the variable az_angles
-
+        az_angles = np.arange(-180, 180 + new_az_res, new_az_res)
+        
         # create new grid of elevation angles, in SOFA these range from [-90 +90] degrees
         # call the variable el_angles
+        el_angles = np.arange(-90, 90 + new_el_res, new_el_res)
 
         # create a 2D meshgrid with both azimuth and elevation angles
         new_az_grid, new_el_grid = np.meshgrid(az_angles, el_angles)
@@ -139,14 +141,34 @@ class HRIRInterpolator:
             #### WRITE YOUR CODE HERE ####
 
             # find theta_grid and phi_grid
+            theta_grid = az_grid[1] - az_grid[0]
+            phi_grid = el_grid[1] - el_grid[0]
+
+            theta = az_new
+            phi = el_new
 
             # find c_theta and c_phi
-
+            c_theta = theta % theta_grid / theta_grid
+            c_phi = phi % phi_grid / phi_grid
             # get the interpolation weights
 
             # get the four nearest HRIRs (use get_index() function)
-
+            idx_a = get_index(el_idx, az_idx)
+            idx_b = get_index(el_idx, az_idx + 1)
+            idx_c = get_index(el_idx + 1, az_idx + 1)
+            idx_d = get_index(el_idx + 1, az_idx)
             # find the interpolated HRIR and append it to hrirs_interp
+            hrir_a = self.hrir_set.hrir_data[idx_a]
+            hrir_b = self.hrir_set.hrir_data[idx_b]
+            hrir_c = self.hrir_set.hrir_data[idx_c]
+            hrir_d = self.hrir_set.hrir_data[idx_d]
+            hrirs_interp.append(
+                (1 - c_theta) * (1 - c_phi) * hrir_a +
+                (1 - c_phi) * c_theta * hrir_b +
+                c_theta * c_phi * hrir_c +
+                c_phi * (1 - c_theta) * hrir_d
+            )
+
 
         # Stack all interpolated HRIRs into numpy array
         hrirs_interp = np.stack(
