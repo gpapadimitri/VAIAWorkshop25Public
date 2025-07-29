@@ -39,7 +39,11 @@ def convert_A2B_format_tetramic(rirs_Aformat: NDArray) -> NDArray:
     # Create SN3D-normalized real SH basis functions (ACN order)
     # Order: [Y_0^0, Y_1^-1, Y_1^0, Y_1^1] => [W, Y, Z, X]
     
+    # az = cart2sph(dirs[:, 0], dirs[:, 1], dirs[:, 2])[0]  # azimuth
+    # el = cart2sph(dirs[:, 0], dirs[:, 1], dirs[:, 2])[1]  # elevation
     # sh_basis = spa.sph.sh_matrix(1, dirs[:, 0], dirs[:, 1], type='real')
+    # spaudio uses zenith so 90 - elevation
+    
     x = dirs[:, 0]
     y = dirs[:, 1]
     z = dirs[:, 2]
