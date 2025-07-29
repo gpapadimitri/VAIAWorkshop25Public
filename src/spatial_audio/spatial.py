@@ -38,12 +38,35 @@ def convert_A2B_format_tetramic(rirs_Aformat: NDArray) -> NDArray:
 
     # Create SN3D-normalized real SH basis functions (ACN order)
     # Order: [Y_0^0, Y_1^-1, Y_1^0, Y_1^1] => [W, Y, Z, X]
+    
+    # sh_basis = spa.sph.sh_matrix(1, dirs[:, 0], dirs[:, 1], type='real')
+    x = dirs[:, 0]
+    y = dirs[:, 1]
+    z = dirs[:, 2]
+    
+    theta = np.arccos(z)
+    phi = np.arctan2(y, x)
+
+    cos_theta = np.cos(theta)
+    sin_theta = np.sin(theta)
+    sin_phi = np.sin(phi)
+    cos_phi = np.cos(phi)
+
+    Y0 = np.ones_like(theta) / np.sqrt(4 * np.pi)  # Y_0^0
+    Y1 = np.sqrt(3 / (4 * np.pi)) * sin_theta * sin_phi # Y_1^-1
+    Y2 = np.sqrt(3 / (4 * np.pi)) * cos_theta # Y_1^0
+    Y3 = np.sqrt(3 / (4 * np.pi)) * sin_theta * cos_phi # Y_1^1
 
     # Stack SH functions into shape (num_mic_dirs, num_channels)
+    sh_basis = np.column_stack((Y0, Y1, Y2, Y3))
 
     # Invert to get A → B transform
+    sh_basis_inv = np.linalg.pinv(sh_basis)
 
     # Multiply wth inverted matrix with A-format RIRs to get B-format RIRs of
     # shape (num_time_samples, num_channels). Use einsum
+    # h = sh_basis_inv @ rirs_Aformat
+    h = np.einsum('mn,tn->tm', sh_basis_inv, rirs_Aformat)
 
     # Return B-format RIRs of shape: (num_time_samples, num_channels) in ACN/SN3D
+    return h
